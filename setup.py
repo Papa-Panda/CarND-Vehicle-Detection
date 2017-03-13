@@ -4,7 +4,7 @@ import glob
 import time
 import pickle
 
-from train_vehicle_classifier import extract_features
+from features import extract_features
 
 from sklearn.preprocessing import StandardScaler
 
@@ -69,11 +69,11 @@ def preprocess(path="./data"):
     valid_imgs.extend(valid)
     test_imgs.extend(test)
 
-    colorspace = 'RGB' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    colorspace = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
     orient = 9
     pix_per_cell = 8
     cell_per_block = 2
-    hog_channel = 0 # Can be 0, 1, 2, or "ALL"
+    hog_channel = 'ALL'
 
     car_imgs = [train_imgs, valid_imgs, test_imgs]
 
@@ -105,11 +105,11 @@ def preprocess(path="./data"):
     X_train_scaler = StandardScaler().fit(X_train)
     scaled_X_train = X_train_scaler.transform(X_train)
 
-    X_valid_scaler = StandardScaler().fit(X_valid)
-    scaled_X_valid = X_valid_scaler.transform(X_valid)
+    # X_valid_scaler = StandardScaler().fit(X_valid)
+    scaled_X_valid = X_train_scaler.transform(X_valid)
 
-    X_test_scaler = StandardScaler().fit(X_test)
-    scaled_X_test = X_test_scaler.transform(X_test)
+    # X_test_scaler = StandardScaler().fit(X_test)
+    scaled_X_test = X_train_scaler.transform(X_test)
 
     # # Define the labels vector
     y_train = np.hstack((np.ones(len(car_features[0])), np.zeros(len(notcar_features[0]))))
@@ -123,6 +123,7 @@ def preprocess(path="./data"):
     data["y_train"] = y_train
     data["y_valid"] = y_valid
     data["y_test"] = y_test
+    data["X_scaler"] = X_train_scaler
 
     with open('./data/vehicle_data.pickle', 'wb') as file:
         pickle.dump(data, file)
