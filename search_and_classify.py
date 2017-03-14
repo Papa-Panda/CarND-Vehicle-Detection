@@ -8,16 +8,9 @@ import matplotlib.pyplot as plt
 from features import get_hog_features
 from features import bin_spatial
 from features import color_hist
+from features import convert_color
 
 from scipy.ndimage.measurements import label
-
-def convert_color(img, conv='RGB2YCrCb'):
-    if conv == 'RGB2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    if conv == 'BGR2YCrCb':
-        return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    if conv == 'RGB2LUV':
-        return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
@@ -109,20 +102,39 @@ def draw_labeled_bboxes(img, labels):
     for car_number in range(1, labels[1]+1):
         # Find pixels with each car_number label value
         nonzero = (labels[0] == car_number).nonzero()
+
         # Identify x and y values of those pixels
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
+
+        topX = np.min(nonzerox)
+        topY = np.min(nonzeroy)
+        botX = np.max(nonzerox)
+        botY = np.max(nonzeroy)
+
+        cx = nonzero[1].mean()
+        cy = nonzero[0].mean()
+        
+        # TODO Make these more configurable
+        # Adjust the width of the window based on the detection location. 
+        scale = (cy - 400)/150.0
+        win_size = 100 + (150 * scale)
+
         # Define a bounding box based on min/max x and y
-        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+        bbox = ((topX, topY), (botX, botY))
+        cv2.rectangle(img, bbox[0], bbox[1], (0,255,0), 6)
+
+        bbox = ( (int(cx-win_size/2), int(cy-win_size/2)), (int(cx+win_size/2), int(cy+win_size/2)) )
         # Draw the box on the image
         cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+        
     # Return the image
     return img
 
 def process():
     ystart = 400
     ystop = 656
-    scales = [1.0, 1.5, 2.0, 2.5, 3.0]
+    scales = [1.0, 1.2, 1.5]
     orient = 9
     pix_per_cell = 8
     cell_per_block = 2
@@ -137,6 +149,7 @@ def process():
     X_scaler = data['X_scaler']
 
     img = mpimg.imread('test_images/test1.jpg')
+
     heatmap = np.zeros_like(img[:, :, 0]).astype(np.float)
 
     bbox = []

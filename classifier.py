@@ -30,7 +30,7 @@ def train():
           {'C': [1, 10, 100, 1000], 'loss': ['squared_hinge']},
     ]
 
-    svc = LinearSVC(C=1000.0, loss='hinge')
+    svc = LinearSVC(C=1.0, loss='hinge')
     # Check the training time for the SVC
     t=time.time()
     svc.fit(X_train, y_train)
