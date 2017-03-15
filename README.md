@@ -16,7 +16,7 @@ The code is organized in following files:
 
 
 * **[setup.py](./setup.py)** Downloads the vehicle/non-vehicle zip data, extract features and stores them as a single file. 
-* **[filters.py](./filters.py)** Set of utility functions for computing hog, color and spatial filters.
+* **[features.py](./features.py)** Set of utility functions for computing hog, color and spatial filters.
 * **[classifier.py](classifier.py)** Import the features created by setup.py and trains a linear SVM classifier. The classifier is also stored in a pickle file. 
 * **[tracker.py](tracker.py)** The implementation of our main pipeline. 
 
@@ -93,7 +93,7 @@ Below is the tracking pipeline applied to six frames in our video. The heatmap g
 
 ### Discussion
 ---
-
+I
 We presented a vehicle detection and tracking pipeline using a combination of HOG, color and spatial filters along with a sliding window algorithm that uses a linear SVM classifier to detect vehicles. The pipeline works decently and has very few false positives. These false positives can be eliminated further by experimenting with the thresholding of heatmap or using a better classifier. 
 
 Our pipeline does seem to  struggle when cars are not fully visible yet or behind each other. This can be fixed by tracking/predicting the position of each car in the next frame. 
