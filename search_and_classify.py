@@ -1,3 +1,7 @@
+'''
+A set of experiments. The main entry point is tracker.py
+'''
+
 import numpy as np
 import cv2
 import pickle
@@ -98,6 +102,9 @@ def apply_threshold(heatmap, threshold):
     return heatmap
 
 def draw_labeled_bboxes(img, labels):
+    print (labels[0].shape)
+
+
     # Iterate through all detected cars
     for car_number in range(1, labels[1]+1):
         # Find pixels with each car_number label value
@@ -121,20 +128,22 @@ def draw_labeled_bboxes(img, labels):
         win_size = 100 + (150 * scale)
 
         # Define a bounding box based on min/max x and y
-        bbox = ((topX, topY), (botX, botY))
-        cv2.rectangle(img, bbox[0], bbox[1], (0,255,0), 6)
+        # bbox = ((topX, topY), (botX, botY))
+        # cv2.rectangle(img, bbox[0], bbox[1], (0,255,0), 6)
 
         bbox = ( (int(cx-win_size/2), int(cy-win_size/2)), (int(cx+win_size/2), int(cy+win_size/2)) )
         # Draw the box on the image
         cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
-        
+
     # Return the image
     return img
 
 def process():
+    import glob
+
     ystart = 400
     ystop = 656
-    scales = [1.0, 1.2, 1.5]
+    scales = [1.0, 1.2, 1.3, 1.5]
     orient = 9
     pix_per_cell = 8
     cell_per_block = 2
@@ -148,34 +157,90 @@ def process():
     svc = data['svc']
     X_scaler = data['X_scaler']
 
-    img = mpimg.imread('test_images/test1.jpg')
+    f, ax = plt.subplots(6, 4, figsize=(50, 50))
+    # img = mpimg.imread('test_images/test1.jpg')
+    i = 0
+    fnames = glob.glob('test_images2/*.jpg')
+    for fname in fnames:
+        print (i)
+        img = mpimg.imread(fname)
 
-    heatmap = np.zeros_like(img[:, :, 0]).astype(np.float)
+        heatmap = np.zeros_like(img[:, :, 0]).astype(np.float)
 
-    bbox = []
-    for scale in scales:
-        bbox.extend(find_cars(img, ystart, ystop, scale, svc,
+        bbox = []
+        for scale in scales:
+            bbox.extend(find_cars(img, ystart, ystop, scale, svc,
                         X_scaler, orient, pix_per_cell, 
                         cell_per_block, spatial_size, hist_bins))
 
-    out_img = draw_boxes(img, bbox)
-    plt.imshow(out_img)
-    plt.savefig('output_images/hog_detection.jpg')
+        # ax[i, 0].imshow(img)
+        # if i == 0:
+        #     ax[i, 0].set_title('Original Image', fontsize=30)
 
-    heatmap = add_heat(heatmap, bbox)
-    heatmap = apply_threshold(heatmap, 3)
+        out_img = draw_boxes(img, bbox)
+        ax[i, 0].imshow(out_img)
+        if i == 0:
+            ax[i, 0].set_title('Hog Detection', fontsize=30)
+        
+        heatmap = add_heat(heatmap, bbox)
+        heatmap = apply_threshold(heatmap, 5)
 
-    heatplot = np.clip(heatmap, 0, 255)
-    plt.imshow(heatplot, cmap='hot')
-    plt.title('Heat Map')
-    plt.savefig('output_images/heatmap.jpg')
+        heatplot = np.clip(heatmap, 0, 255)
+        ax[i, 1].imshow(heatplot, cmap='hot')
+        if i == 0:
+            ax[i, 1].set_title('Heat Map', fontsize=30)
+        
+        labels = label(heatmap)
+        ax[i, 2].imshow(labels[0], cmap='gray')
+        if i == 0:
+            ax[i, 2].set_title('Labels', fontsize=30)
 
-    labels = label(heatmap)
-    draw_img = draw_labeled_bboxes(np.copy(img), labels)
+        draw_img = draw_labeled_bboxes(np.copy(img), labels)
 
-    plt.imshow(draw_img)
-    plt.savefig('output_images/final_result.jpg')
+        ax[i, 3].imshow(draw_img)
+        if i == 0:
+            ax[i, 3].set_title('Result', fontsize=30)
 
+        i += 1
+
+    plt.savefig('output_images/pipeline_video_frame.jpg')
+
+    #     import glob
+    # i = 0
+    # fm = 0
+    # f, ax = plt.subplots(6, 4, figsize=(50, 50))
+    # fnames = glob.glob('test_images2/test*.jpg')
+    # for fname in fnames:
+    #     img = mpimg.imread(fname)
+    #     img_out = tracker.update(img)
+
+    #     ax[i, 0].imshow(tracker.tmp_img)
+    #     if i == 0:
+    #         ax[i, 0].set_title('Hog Detection', fontsize=30)
+
+    #     heatplot = np.clip(tracker.heatmap, 0, 255)
+    #     ax[i, 1].imshow(heatplot, cmap='hot')
+    #     if i == 0:
+    #         ax[i, 1].set_title('Heat Map Threshold', fontsize=30)
+
+    #     ax[i, 2].imshow(tracker.labels[0], cmap='gray')
+    #     if i == 0:
+    #         ax[i, 2].set_title('Labels', fontsize=30)
+
+    #     ax[i, 3].imshow(img_out)
+    #     if i == 0:
+    #         ax[i, 3].set_title('Result', fontsize=30)
+
+    #     print (i, tracker.frame)
+    #     i += 1
+
+    # plt.savefig('output_images/pipeline_video_frame.jpg')
+
+    # img = mpimg.imread('test_images/test1.jpg')
+    # out = tracker.update(img)
+
+    # plt.imshow(out)
+    # plt.show()
 
 if __name__ == "__main__":
     process()

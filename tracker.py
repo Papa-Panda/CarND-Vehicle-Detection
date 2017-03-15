@@ -29,7 +29,7 @@ class Tracker():
         self.labels = None
 
         # Number of pixels should belong to a car
-        self.threshold = 5
+        self.threshold = 4
         self.frame = 0
         self.skipFrmaes = 0
         self.lastFrame = -1 # -1 will process all frames. 
@@ -119,7 +119,7 @@ class Tracker():
                     
         return result
 
-    def draw_boxes(img, boxes, color=(0, 0, 255), thick=5):
+    def draw_boxes(self, img, boxes, color=(0, 0, 255), thick=5):
         # imcopy = np.copy(img)
 
         for box in boxes:
@@ -150,20 +150,19 @@ class Tracker():
             nonzeroy = np.array(nonzero[0])
             nonzerox = np.array(nonzero[1])
 
-            # topX = np.min(nonzerox)
-            # topY = np.min(nonzeroy)
-            # botX = np.max(nonzerox)
-            # botY = np.max(nonzeroy)
+            topX = np.min(nonzerox)
+            topY = np.min(nonzeroy)
+            botX = np.max(nonzerox)
+            botY = np.max(nonzeroy)
 
             cx = nonzero[1].mean()
             cy = nonzero[0].mean()
             
-            # TODO Make these more configurable
-            # Adjust the width of the window based on the detection location. 
-            scale = (cy - ystart)/250.0
-            win_size = 100 + (200 * scale)
+            w = botX - topX
+            h = botY - topY
 
-            bbox = ( (int(cx-win_size/2), int(cy-win_size/2)), (int(cx+win_size/2), int(cy+win_size/2)) )
+            # bbox = ( (int(cx-win_size/2), int(cy-win_size/2)), (int(cx+win_size/2), int(cy+win_size/2)) )
+            bbox = ( (int(cx-w/2), int(cy-h/2)), (int(cx+w/2), int(cy+h/2)) )
             # Draw the box on the image
             cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
 
@@ -178,13 +177,14 @@ class Tracker():
         if self.heatmap == None:
             self.heatmap = np.zeros_like(img[:, :, 0]).astype(np.float)
 
-        if self.frame != 0 and (self.frame % 3) != 0 :
+        if self.frame != 0 and (self.frame % 5) != 0 :
+            print ("Skipping")
             img = self.draw_labeled_bboxes(img, self.labels)
-            self.heatmap[self.heatmap > 0 ] = 0
+            self.heatmap[self.heatmap > self.threshold ] = self.threshold - 1
             self.frame += 1
             return img
 
-        scales = [1.0, 1.2, 1.3, 1.5]
+        scales = [1.0, 1.2, 1.3, 1.4, 1.5, 1.6]
         bbox = []
         for scale in scales:
             bbox.extend(self.find_cars(img, scale))
@@ -194,23 +194,19 @@ class Tracker():
         self.labels = label(self.heatmap)
         self.frame += 1
 
-        return self.draw_labeled_bboxes(img, self.labels)
+        img = self.draw_labeled_bboxes(img, self.labels)
+
+        return img
 
 if __name__ == "__main__":
     import sys
 
     tracker = Tracker()
-    tracker.skipFrmaes = 4 * 25
-    tracker.lastFrame = 8 * 25
+    # tracker.skipFrmaes = 4 * 25
+    # tracker.lastFrame = 8 * 25
 
     clip1 = VideoFileClip(sys.argv[1])
     video_clip = clip1.fl_image(tracker.update)
     video_clip.write_videofile('out.mp4', audio=False)
-
-    # img = mpimg.imread('test_images/test1.jpg')
-    # out = tracker.update(img)
-
-    # plt.imshow(out)
-    # plt.show()
 
 
