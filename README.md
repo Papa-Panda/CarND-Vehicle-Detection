@@ -78,6 +78,7 @@ For drawing the bounding box. We compute the center of the connected blobs retur
 ![alt text][image3]
 
 ### Video Processing
+---
 
 The video tracking is implemented by the Tracker class. The code for this class is in `tracker.py` file. Its method `find_cars:line#45` runs the sliding window algorithms and computes the HOG features and runs the classifier. This method also computes all detections windows. 
 
@@ -91,6 +92,7 @@ Below is the tracking pipeline applied to six frames in our video. The heatmap g
 
 
 ### Discussion
+---
 
 We presented a vehicle detection and tracking pipeline using a combination of HOG, color and spatial filters along with a sliding window algorithm that uses a linear SVM classifier to detect vehicles. The pipeline works decently and has very few false positives. These false positives can be eliminated further by experimenting with the thresholding of heatmap or using a better classifier. 
 
